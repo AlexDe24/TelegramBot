@@ -5,10 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TelegramBot"
         mc:Ignorable="d"
-        Title="Телеграм Бот" Height="180" Width="200" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow">
+        Title="Телеграм Бот" Height="200" Width="200" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow">
     <Grid>
-        <StackPanel Margin="20" Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Name="Start" HorizontalAlignment="Center" Height="25" Width="70" Margin="10" Background="White" Click="Start_Click">Запуск</Button>
-        </StackPanel>
+        <Image Source="Resources/Бот.jpg" Stretch="Fill"/>
     </Grid>
 </Window>
