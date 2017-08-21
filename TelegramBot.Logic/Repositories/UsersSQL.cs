@@ -5,7 +5,7 @@ using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TelegramBot.Logic.DTO;
+using TelegramBot.Logic.Entity;
 
 namespace TelegramBot.Logic.Repositories
 {
@@ -27,6 +27,9 @@ namespace TelegramBot.Logic.Repositories
         /// <summary>
         /// Добавление пользователя или изменение города
         /// </summary>
+        /// <param name="userId">id пользователя</param>
+        /// <param name="cityName">название города</param>
+        /// <returns></returns>
         public async Task AddOfEditUserAsync(long userId, string cityName)
         {
             var baseUser = await _BaseCt.Users.Where(x => x.UserId == userId).Include(x => x.City).FirstOrDefaultAsync().ConfigureAwait(false);
@@ -76,8 +79,10 @@ namespace TelegramBot.Logic.Repositories
         }
 
         /// <summary>
-        /// Чтение пользователя
+        /// Чтение пользователя с городами 
         /// </summary>
+        /// <param name="userId">id пользователя</param>
+        /// <returns></returns>
         public async Task<User> GetUserAsync(long userId)
         {
             try

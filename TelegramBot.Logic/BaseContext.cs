@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Data.Entity;
 using System.Runtime.Remoting.Contexts;
-using TelegramBot.Logic.DTO;
+using TelegramBot.Logic.Entity;
 
 namespace TelegramBot.Logic
 {
@@ -12,5 +12,6 @@ namespace TelegramBot.Logic
         }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<City> City { get; set; }
     }
 }

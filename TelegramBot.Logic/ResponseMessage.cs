@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Telegram.Bot.Types;
+using TelegramBot.Logic.APITranslate;
+using TelegramBot.Logic.APIWeather;
 using TelegramBot.Logic.Repositories;
 
 namespace TelegramBot.Logic
@@ -13,17 +15,20 @@ namespace TelegramBot.Logic
     /// </summary>
     public class ResponseMessage
     {
-        public List<long> WaitAnswerForWeather;
-        public List<long> WaitAnswerForRememder;
+        public List<long> WaitAnswerForWeather { get; set; }
+        public List<long> WaitAnswerForRememder { get; set; }
 
-        private APIClass _apiWork;
+        private INterfaceTranslator _translator;
+        private INterfaceWeather _weather;
 
-        public ResponseMessage(APIClass apiWork)
+        public ResponseMessage()
         {
             WaitAnswerForWeather = new List<long>();
             WaitAnswerForRememder = new List<long>();
 
-            _apiWork = apiWork;
+            _translator = new Translator();
+            //_weather = new WorldWeatherOnline();
+            _weather = new OpenWeatherMap();
         }
 
         /// <summary>
@@ -39,7 +44,7 @@ namespace TelegramBot.Logic
                 {
                     WaitAnswerForWeather.Remove(message.Chat.Id);
 
-                    return CreateWeatherResponseMessage(_apiWork.Translate(message.Text, "en"));
+                    return CreateWeatherResponseMessage(_translator.Translate(message.Text, "en"));
                 }
                 catch (Exception)
                 {
@@ -52,7 +57,7 @@ namespace TelegramBot.Logic
 
                 using (var usersSQL = new UsersSQL())
                 {
-                    usersSQL.AddOfEditUserAsync(message.Chat.Id, _apiWork.Translate(message.Text, "en")).Wait();
+                    usersSQL.AddOfEditUserAsync(message.Chat.Id, _translator.Translate(message.Text, "en")).Wait();
                 }
 
                 return "Город сохранён.";
@@ -78,7 +83,7 @@ namespace TelegramBot.Logic
                                 newsplit += split[i] + " ";
                             }
 
-                            return CreateWeatherResponseMessage(_apiWork.Translate(newsplit, "en"));
+                            return CreateWeatherResponseMessage(_translator.Translate(newsplit, "en"));
                         }
                         else
                         {
@@ -93,14 +98,19 @@ namespace TelegramBot.Logic
 
                             for (int i = 1; i < split.Length; i++)
                             {
-                                newsplit += split[0] + " ";
+                                newsplit += split[i] + " ";
                             }
+
+                            newsplit = newsplit.Remove(0, 1);
 
                             try
                             {
-                                WaitAnswerForWeather.Remove(message.Chat.Id);
+                                using (var usersSQL = new UsersSQL())
+                                {
+                                    usersSQL.AddOfEditUserAsync(message.Chat.Id, _translator.Translate(newsplit, "en")).Wait();
+                                }
 
-                                return CreateWeatherResponseMessage(_apiWork.Translate(newsplit, "en"));
+                                return "Город сохранён.";
                             }
                             catch (Exception)
                             {
@@ -116,8 +126,8 @@ namespace TelegramBot.Logic
                     case "Помощь":
                     case "/start":
                         return $"Привет, {message.Chat.FirstName}, я ПогодаБот!\n" +
-                            "Отправь мне /weather или /погода и название города, чтобы получить прогноз погоды на сегодня!\n" +
-                            "А так же ты можешь отправить мне /remembercity, чтобы я запомнил город и ты мог всегда быстро посмотреть в нём погоду!";
+                            "Отправь мне Погода и название города, чтобы получить прогноз погоды на сегодня!\n" +
+                            "А так же ты можешь отправить мне Запомнить и название города, чтобы я запомнил город и ты мог всегда быстро посмотреть в нём погоду!";
                     default:
                         return "Такой команды нет.";
                 }
@@ -131,13 +141,13 @@ namespace TelegramBot.Logic
         /// <returns>сообщение</returns>
         private string CreateWeatherResponseMessage(string city)
         {
-            var fullResponse = _apiWork.WeatherRestSharp(city);
+            var weather = _weather.GetWeather(city);
 
-            var response = $"Погода на {DateTime.Now.ToString("dd/MM/yyyy")} в городе {_apiWork.Translate(fullResponse.Name, "ru")}: \n" +
-                $"{Convert(fullResponse.Weather[0].Description) + WeatherEmoji(fullResponse.Weather[0].Description)}\n" +
-                $"Направление ветра: {WindDirection(fullResponse.Wind.Deg)}\n" +
-                $"Скорость ветра: {fullResponse.Wind.Speed} м/с \n" +
-                $"Средняя температура: {fullResponse.Main.Temp} C°\n";
+            var response = $"Погода на {DateTime.Now.ToString("dd/MM/yyyy")} в городе {_translator.Translate(weather.CityName, "ru")}: \n" +
+                $"{Convert(weather.Description) + WeatherEmoji(weather.Description)}\n" +
+                $"Направление ветра: {WindDirection(weather.WindDeg)}\n" +
+                $"Скорость ветра: {weather.WindSpeed} м/с \n" +
+                $"Средняя температура: {weather.Temp} C°\n";
 
             return response;
         }
@@ -197,7 +207,7 @@ namespace TelegramBot.Logic
                 case "снег":
                     return " 🌨";
                 default:
-                    return " 🦉";
+                    return "";
             }
             
         }

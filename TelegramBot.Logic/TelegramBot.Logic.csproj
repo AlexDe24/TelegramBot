@@ -63,9 +63,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="APIClass.cs" />
+    <Compile Include="APIBot\Bot.cs" />
+    <Compile Include="APITranslate\INterfaceTranslator.cs" />
+    <Compile Include="APITranslate\Translator.cs" />
+    <Compile Include="APIWeather\WorldWeatherOnline.cs" />
+    <Compile Include="APIWeather\INterfaceWeather.cs" />
+    <Compile Include="APIWeather\OpenWeatherMap.cs" />
     <Compile Include="BaseContext.cs" />
-    <Compile Include="DTO\City.cs" />
+    <Compile Include="Entity\City.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
@@ -73,13 +78,14 @@
     </Compile>
     <Compile Include="Repositories\UsersSQL.cs" />
     <Compile Include="ResponseMessage.cs" />
-    <Compile Include="DTO\User.cs" />
-    <Compile Include="TranslatorResponse.cs" />
-    <Compile Include="WeatherRespone\WeatherInfo.cs" />
-    <Compile Include="WeatherRespone\WeatherResponse.cs" />
+    <Compile Include="Entity\User.cs" />
+    <Compile Include="APITranslate\TranslatorResponse.cs" />
+    <Compile Include="APIWeather\WeatherResponeOpenWeatherMap\WeatherDate.cs" />
+    <Compile Include="APIWeather\WeatherResponeOpenWeatherMap\WeatherInfo.cs" />
+    <Compile Include="APIWeather\WeatherResponeOpenWeatherMap\WeatherResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WeatherRespone\TemperatureInfo.cs" />
-    <Compile Include="WeatherRespone\WindInfo.cs" />
+    <Compile Include="APIWeather\WeatherResponeOpenWeatherMap\TemperatureInfo.cs" />
+    <Compile Include="APIWeather\WeatherResponeOpenWeatherMap\WindInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

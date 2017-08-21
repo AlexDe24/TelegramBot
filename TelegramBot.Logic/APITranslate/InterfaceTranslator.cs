@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TelegramBot.Logic
+namespace TelegramBot.Logic.APITranslate
 {
-    public class TranslatorResponse
+    public interface INterfaceTranslator
     {
-        public string Text { get; set; }
+        string Translate(string text, string langTo);
     }
 }

@@ -4,15 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TelegramBot.Logic.DTO
+namespace TelegramBot.Logic.Entity
 {
-    public class City
+    public class User
     {
         public int Id { get; set; }
 
-        public string Name { get; set; }
+        public long UserId { get; set; }
 
-        public User User { get; set; }
-
+        public List<City> City { get; set; }
     }
 }
