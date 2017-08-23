@@ -13,51 +13,76 @@ namespace TelegramBot.Logic
     /// <summary>
     /// Класс для обработки сообщений и ответа на них
     /// </summary>
-    public class ResponseMessage
+    public class MessageControl
     {
-        public List<long> WaitAnswerForWeather { get; set; }
-        public List<long> WaitAnswerForRememder { get; set; }
+        private List<long> _isWaitAnswerForWeather { get; set; }
+        private List<long> _isWaitAnswerForRememder { get; set; }
 
-        private INterfaceTranslator _translator;
-        private INterfaceWeather _weather;
+        private ICanTranslate _translator;
+        private ICanGetWeatherByName _weatherByName;
+        private ICanGetWeatherByCoordinate _weatherByCoordinate;
 
-        public ResponseMessage()
+        private Func<IUsersRepository> _createRepository;
+
+        public MessageControl(ICanTranslate translator, ICanGetWeatherByName weatherByName, ICanGetWeatherByCoordinate weatherByCoordinate, List<long> isWaitAnswerForWeather, List<long> isWaitAnswerForRememder, Func<IUsersRepository> createRepository)
         {
-            WaitAnswerForWeather = new List<long>();
-            WaitAnswerForRememder = new List<long>();
+            _isWaitAnswerForWeather = isWaitAnswerForWeather;
+            _isWaitAnswerForRememder = isWaitAnswerForRememder;
 
-            _translator = new Translator();
-            //_weather = new WorldWeatherOnline();
-            _weather = new OpenWeatherMap();
+            _weatherByCoordinate = weatherByCoordinate;
+            _weatherByName = weatherByName;
+            _translator = translator;
+
+            _createRepository = createRepository;
+        }
+
+        /// <summary>
+        /// Обработка комманд, если была отправленна геолокация
+        /// </summary>
+        /// <param name="latitude">Широта</param>
+        /// <param name="longitude">Долгота</param>
+        public string LocationCommands(double latitude, double longitude)
+        {
+            if (_weatherByCoordinate != null)
+            {
+                var weather = _weatherByCoordinate.GetWeather(latitude, longitude);
+
+                return CreateWeatherResponseMessage(weather);
+            }
+            else
+            {
+                return "Прогноз погоды по координатам не поддерживается.";
+            }
         }
 
         /// <summary>
         /// Обработка комманд, если было отправлено сообщение
         /// </summary>
         /// <param name="message">текст сообщения</param>
-        /// <param name="bot">бот</param>
         public string MessageCommands(Message message)
         {
-            if (WaitAnswerForWeather.Any(x => x == message.Chat.Id))
+            if (_isWaitAnswerForWeather.Any(x => x == message.Chat.Id)) //проверка на ожидание города для прогноза
             {
                 try
                 {
-                    WaitAnswerForWeather.Remove(message.Chat.Id);
+                    _isWaitAnswerForWeather.Remove(message.Chat.Id);
 
-                    return CreateWeatherResponseMessage(_translator.Translate(message.Text, "en"));
+                    var weather = _weatherByName.GetWeather(_translator.Translate(message.Text, "ru", "en"));
+
+                    return CreateWeatherResponseMessage(weather);
                 }
                 catch (Exception)
                 {
                     return "Такого города нет.";
                 }
             }
-            else if (WaitAnswerForRememder.Any(x => x == message.Chat.Id))
+            else if (_isWaitAnswerForRememder.Any(x => x == message.Chat.Id)) //проверка на ожидание города для запоминания
             {
-                WaitAnswerForRememder.Remove(message.Chat.Id);
+                _isWaitAnswerForRememder.Remove(message.Chat.Id);
 
-                using (var usersSQL = new UsersSQL())
+                using (var usersRepository = _createRepository())
                 {
-                    usersSQL.AddOfEditUserAsync(message.Chat.Id, _translator.Translate(message.Text, "en")).Wait();
+                    usersRepository.AddOfEditUserAsync(message.Chat.Id, _translator.Translate(message.Text, "ru", "en")).Wait();
                 }
 
                 return "Город сохранён.";
@@ -83,11 +108,13 @@ namespace TelegramBot.Logic
                                 newsplit += split[i] + " ";
                             }
 
-                            return CreateWeatherResponseMessage(_translator.Translate(newsplit, "en"));
+                            var weather = _weatherByName.GetWeather(_translator.Translate(newsplit, "ru", "en"));
+
+                            return CreateWeatherResponseMessage(weather);
                         }
                         else
                         {
-                            WaitAnswerForWeather.Add(message.Chat.Id);
+                            _isWaitAnswerForWeather.Add(message.Chat.Id);
                             return "Введите, пожалуйста, город.";
                         }
                     case "Запомнить":
@@ -105,9 +132,9 @@ namespace TelegramBot.Logic
 
                             try
                             {
-                                using (var usersSQL = new UsersSQL())
+                                using (var usersRepository = _createRepository())
                                 {
-                                    usersSQL.AddOfEditUserAsync(message.Chat.Id, _translator.Translate(newsplit, "en")).Wait();
+                                    usersRepository.AddOfEditUserAsync(message.Chat.Id, _translator.Translate(newsplit, "ru", "en")).Wait();
                                 }
 
                                 return "Город сохранён.";
@@ -119,14 +146,14 @@ namespace TelegramBot.Logic
                         }
                         else
                         {
-                            WaitAnswerForRememder.Add(message.Chat.Id);
+                            _isWaitAnswerForRememder.Add(message.Chat.Id);
                             return "Введите, пожалуйста, город.";
                         }
                     case "/help":
                     case "Помощь":
                     case "/start":
                         return $"Привет, {message.Chat.FirstName}, я ПогодаБот!\n" +
-                            "Отправь мне Погода и название города, чтобы получить прогноз погоды на сегодня!\n" +
+                            "Отправь мне Погода и название города или геолокацию, чтобы получить прогноз погоды на сегодня!\n" +
                             "А так же ты можешь отправить мне Запомнить и название города, чтобы я запомнил город и ты мог всегда быстро посмотреть в нём погоду!";
                     default:
                         return "Такой команды нет.";
@@ -137,13 +164,11 @@ namespace TelegramBot.Logic
         /// <summary>
         /// Создания ответного сообщения по погоде
         /// </summary>
-        /// <param name="city">город</param>
+        /// <param name="weather">прогноз</param>
         /// <returns>сообщение</returns>
-        private string CreateWeatherResponseMessage(string city)
+        private string CreateWeatherResponseMessage(WeatherData weather)
         {
-            var weather = _weather.GetWeather(city);
-
-            var response = $"Погода на {DateTime.Now.ToString("dd/MM/yyyy")} в городе {_translator.Translate(weather.CityName, "ru")}: \n" +
+            var response = $"Погода на {DateTime.Now.ToString("dd/MM/yyyy")} в городе {_translator.Translate(weather.CityName, "en", "ru")}: \n" +
                 $"{Convert(weather.Description) + WeatherEmoji(weather.Description)}\n" +
                 $"Направление ветра: {WindDirection(weather.WindDeg)}\n" +
                 $"Скорость ветра: {weather.WindSpeed} м/с \n" +

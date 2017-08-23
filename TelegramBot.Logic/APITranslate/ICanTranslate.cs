@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace TelegramBot.Logic.APITranslate
 {
-    public interface INterfaceTranslator
+    public interface ICanTranslate
     {
-        string Translate(string text, string langTo);
+        string Translate(string text, string langFrom, string langTo);
     }
 }

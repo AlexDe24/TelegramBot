@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TelegramBot.Logic.APIWeather.WeatherRespone
+namespace TelegramBot.Logic.APIWeather
 {
-    public class WeatherDate
+    public class WeatherData
     {
         public String CityName { get; set; } //Название города
 
@@ -15,6 +15,7 @@ namespace TelegramBot.Logic.APIWeather.WeatherRespone
         public float Temp { get; set; } //средняя температура
 
         public float WindSpeed { get; set; } //скорость ветра
+
         public int WindDeg { get; set; } //направление ветра
     }
 }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TelegramBot.Logic.APIWeather.WeatherRespone
+namespace TelegramBot.Logic.APIWeather.WeatherResponeOpenWeatherMap
 {
     public class TemperatureInfo
     {

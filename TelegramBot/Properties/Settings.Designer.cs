@@ -26,12 +26,85 @@ namespace TelegramBot.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("430520142:AAF9c0PIq-VWg_MehdYDJq9rULHrxlB7zMM")]
-        public string Token {
+        public string TokenBot {
             get {
-                return ((string)(this["Token"]));
+                return ((string)(this["TokenBot"]));
             }
             set {
-                this["Token"] = value;
+                this["TokenBot"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("7a14e046be3afaf782b041c3dcf6ec59")]
+        public string TokenDarkSky {
+            get {
+                return ((string)(this["TokenDarkSky"]));
+            }
+            set {
+                this["TokenDarkSky"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://api.darksky.net/forecast")]
+        public string RequestDarkSky {
+            get {
+                return ((string)(this["RequestDarkSky"]));
+            }
+            set {
+                this["RequestDarkSky"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("trnsl.1.1.20170818T125137Z.bc602a78a7863e84.26863776415c893e9c6e51cc8a03462540980" +
+            "d54")]
+        public string TokenTranslator {
+            get {
+                return ((string)(this["TokenTranslator"]));
+            }
+            set {
+                this["TokenTranslator"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://translate.yandex.net/api/v1.5/tr.json/translate?")]
+        public string RequestTranslator {
+            get {
+                return ((string)(this["RequestTranslator"]));
+            }
+            set {
+                this["RequestTranslator"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("b1263a17d6a6ffb120b199f9ccde33a9")]
+        public string TokenOpenWeather {
+            get {
+                return ((string)(this["TokenOpenWeather"]));
+            }
+            set {
+                this["TokenOpenWeather"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://api.openweathermap.org/data/2.5/weather?")]
+        public string RequestOpenWeather {
+            get {
+                return ((string)(this["RequestOpenWeather"]));
+            }
+            set {
+                this["RequestOpenWeather"] = value;
             }
         }
     }

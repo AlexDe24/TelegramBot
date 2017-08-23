@@ -9,35 +9,58 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBot.Logic.APITranslate;
+using TelegramBot.Logic.APIWeather;
 using TelegramBot.Logic.Repositories;
 
 namespace TelegramBot.Logic
 {
     /// <summary>
-    /// Класс работы с API
+    /// Класс работы с API бота
     /// </summary>
-    public class APIClass
+    public class Bot
     {
         private readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
-        private INterfaceTranslator _translator;
-        private ResponseMessage _responseMessage; //Класс для обработки сообщений и ответа на них
+        private List<long> _isWaitAnswerForWeather { get; set; }
+        private List<long> _isWaitAnswerForRememder { get; set; }
+
+        private ICanGetWeatherByCoordinate _weatherByCoordinate;
+        private ICanGetWeatherByName _weatherByName;
+        private ICanTranslate _translator;
+
+        private MessageControl _messageControl; //Класс для обработки сообщений и ответа на них
         private string _key; //токен доступа
 
-        public APIClass(string key)
+        private Func<IUsersRepository> _createRepository;
+
+        private CancellationToken _token;
+
+        public Bot(string key, CancellationToken token, ICanGetWeatherByCoordinate weatherByCoordinate, ICanGetWeatherByName weatherByName, ICanTranslate translator, Func<IUsersRepository> createRepository)
         {
-            _translator = new Translator();
-            _responseMessage = new ResponseMessage();
             _key = key;
+
+            _token = token;
+
+            _isWaitAnswerForWeather = new List<long>();
+            _isWaitAnswerForRememder = new List<long>();
+
+            _translator = translator;
+            _weatherByName = weatherByName;
+            _weatherByCoordinate = weatherByCoordinate;
+
+            _createRepository = createRepository;
+
+            _messageControl = new MessageControl(_translator, _weatherByName, _weatherByCoordinate, _isWaitAnswerForWeather, _isWaitAnswerForRememder, createRepository);
         }
 
         /// <summary>
-        /// Получение запросов и ответ на них
+        /// Получение сообщений и ответ на них
         /// </summary>
         public async Task BotWork()
         {
@@ -46,9 +69,10 @@ namespace TelegramBot.Logic
 
             int offset = 0; //инервал между ответами
 
-            while (true)
+            while (!_token.IsCancellationRequested)
             {
                 var updates = await bot.GetUpdatesAsync(offset);
+
                 Message message;
                 string responseMessage;
 
@@ -61,26 +85,15 @@ namespace TelegramBot.Logic
                             case UpdateType.UnkownUpdate:
                                 break;
                             case UpdateType.EditedMessage:
-                                message = update.EditedMessage;
-                                responseMessage = _responseMessage.MessageCommands(message);
-
-                                var editUpdate = updates.Where(x => x.EditedMessage != null).ToList();
-
-                                var lastMessageNom = editUpdate.Where(x => x.EditedMessage.Chat.Id == message.Chat.Id).LastOrDefault().EditedMessage.MessageId;
-
-                                await bot.EditMessageTextAsync(message.Chat.Id, message.MessageId, "123");
-                                
                                 break;
-
                             case UpdateType.MessageUpdate:
                                 message = update.Message;
                                 switch (message.Type)
                                 {
                                     case MessageType.TextMessage:
+                                        responseMessage = _messageControl.MessageCommands(message);
 
-                                        responseMessage = _responseMessage.MessageCommands(message);
-
-                                        if (_responseMessage.WaitAnswerForRememder.Any(x => x == message.Chat.Id) || _responseMessage.WaitAnswerForWeather.Any(x => x == message.Chat.Id))
+                                        if (_isWaitAnswerForRememder.Any(x => x == message.Chat.Id) || _isWaitAnswerForWeather.Any(x => x == message.Chat.Id))
                                         {
                                             await bot.SendTextMessageAsync(message.Chat.Id, responseMessage,
                                                 false, false, 0, CreateInlineKeyboard());
@@ -98,6 +111,10 @@ namespace TelegramBot.Logic
                                     case MessageType.StickerMessage:
                                         await bot.SendTextMessageAsync(message.Chat.Id, $"Очень смешно, {message.Chat.FirstName}.");
                                         break;
+                                    case MessageType.LocationMessage:
+                                        responseMessage = _messageControl.LocationCommands(message.Location.Latitude, message.Location.Longitude);
+                                        await bot.SendTextMessageAsync(message.Chat.Id, responseMessage);
+                                        break;
                                     default:
                                         await bot.SendTextMessageAsync(message.Chat.Id, "И что мне на это ответить?");
                                         break;
@@ -105,10 +122,8 @@ namespace TelegramBot.Logic
                                 break;
                             case UpdateType.CallbackQueryUpdate:
                                 await bot.EditMessageTextAsync(update.CallbackQuery.From.Id,update.CallbackQuery.Message.MessageId, "Возврат обратно.");
-
-                                //await bot.SendTextMessageAsync(update.CallbackQuery.From.Id, "Возврат обратно.");
-                                _responseMessage.WaitAnswerForRememder.Remove(update.CallbackQuery.From.Id);
-                                _responseMessage.WaitAnswerForWeather.Remove(update.CallbackQuery.From.Id);
+                                _isWaitAnswerForRememder.Remove(update.CallbackQuery.From.Id);
+                                _isWaitAnswerForWeather.Remove(update.CallbackQuery.From.Id);
                                 break;
                             default:
                                 break;
@@ -144,7 +159,7 @@ namespace TelegramBot.Logic
         }
 
         /// <summary>
-        /// Создание клавиатуры
+        /// Создание основной клавиатуры
         /// </summary>
         /// <param name="id">id пользователя</param>
         /// <returns></returns>
@@ -152,9 +167,9 @@ namespace TelegramBot.Logic
         {
             Entity.User userInfo;
 
-            using (var usersSQL = new UsersSQL())
+            using (var usersRepository = _createRepository())
             {
-                userInfo = await usersSQL.GetUserAsync(id);
+                userInfo = await usersRepository.GetUserAsync(id);
             }
 
             var replyKeyboardMarkup = new ReplyKeyboardMarkup()
@@ -172,7 +187,7 @@ namespace TelegramBot.Logic
                             new KeyboardButton[]
                             {
                                 new KeyboardButton("Погода"),
-                                new KeyboardButton($"Погода {_translator.Translate(userInfo.City[0].Name,"ru")}")
+                                new KeyboardButton($"Погода {_translator.Translate(userInfo.City[0].Name, "en", "ru")}")
                             },
                             new KeyboardButton[]
                             {
@@ -190,11 +205,11 @@ namespace TelegramBot.Logic
                             new KeyboardButton[]
                             {
                                 new KeyboardButton("Погода"),
-                                new KeyboardButton($"Погода {_translator.Translate(userInfo.City[0].Name,"ru")}")
+                                new KeyboardButton($"Погода {_translator.Translate(userInfo.City[0].Name, "en", "ru")}")
                             },
                             new KeyboardButton[]
                             {
-                                new KeyboardButton($"Погода {_translator.Translate(userInfo.City[1].Name,"ru")}")
+                                new KeyboardButton($"Погода {_translator.Translate(userInfo.City[1].Name, "en", "ru")}")
                             },
                             new KeyboardButton[]
                             {
@@ -212,12 +227,12 @@ namespace TelegramBot.Logic
                             new KeyboardButton[]
                             {
                                 new KeyboardButton("Погода"),
-                                new KeyboardButton($"Погода {_translator.Translate(userInfo.City[0].Name,"ru")}")
+                                new KeyboardButton($"Погода {_translator.Translate(userInfo.City[0].Name, "en", "ru")}")
                             },
                             new KeyboardButton[]
                             {
-                                new KeyboardButton($"Погода {_translator.Translate(userInfo.City[1].Name,"ru")}"),
-                                new KeyboardButton($"Погода {_translator.Translate(userInfo.City[2].Name,"ru")}")
+                                new KeyboardButton($"Погода {_translator.Translate(userInfo.City[1].Name, "en", "ru")}"),
+                                new KeyboardButton($"Погода {_translator.Translate(userInfo.City[2].Name, "en", "ru")}")
                             },
                             new KeyboardButton[]
                             {
@@ -232,7 +247,6 @@ namespace TelegramBot.Logic
                     default:
                         break;
                 }
-                
             }
             else
             {
@@ -252,7 +266,6 @@ namespace TelegramBot.Logic
                     }
                 };
             }
-
             return replyKeyboardMarkup;
         }
     }

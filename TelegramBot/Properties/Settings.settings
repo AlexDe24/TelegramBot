@@ -2,8 +2,26 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="TelegramBot.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="Token" Type="System.String" Scope="User">
+    <Setting Name="TokenBot" Type="System.String" Scope="User">
       <Value Profile="(Default)">430520142:AAF9c0PIq-VWg_MehdYDJq9rULHrxlB7zMM</Value>
+    </Setting>
+    <Setting Name="TokenDarkSky" Type="System.String" Scope="User">
+      <Value Profile="(Default)">7a14e046be3afaf782b041c3dcf6ec59</Value>
+    </Setting>
+    <Setting Name="RequestDarkSky" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://api.darksky.net/forecast</Value>
+    </Setting>
+    <Setting Name="TokenTranslator" Type="System.String" Scope="User">
+      <Value Profile="(Default)">trnsl.1.1.20170818T125137Z.bc602a78a7863e84.26863776415c893e9c6e51cc8a03462540980d54</Value>
+    </Setting>
+    <Setting Name="RequestTranslator" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://translate.yandex.net/api/v1.5/tr.json/translate?</Value>
+    </Setting>
+    <Setting Name="TokenOpenWeather" Type="System.String" Scope="User">
+      <Value Profile="(Default)">b1263a17d6a6ffb120b199f9ccde33a9</Value>
+    </Setting>
+    <Setting Name="RequestOpenWeather" Type="System.String" Scope="User">
+      <Value Profile="(Default)">http://api.openweathermap.org/data/2.5/weather?</Value>
     </Setting>
   </Settings>
 </SettingsFile>

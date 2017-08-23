@@ -7,27 +7,29 @@ using System.Threading.Tasks;
 
 namespace TelegramBot.Logic.APITranslate
 {
-    public class Translator : INterfaceTranslator
+    public class Translator : ICanTranslate
     {
+        private string _token;
+        private string _request;
+
+        public Translator(string token, string reqest)
+        {
+            _token = token;
+            _request = reqest;
+        }
+
         /// <summary>
-        /// Переводчик
+        /// Перевод текста
         /// </summary>
         /// <param name="text"></param>
         /// <param name="lang"></param>
         /// <returns></returns>
-        public string Translate(string text, string langTo)
+        public string Translate(string text, string langFrom, string langTo)
         {
-            string langFrom = "";
-
-            if (langTo == "ru")
-                langFrom = "en";
-            else
-                langFrom = "ru";
-
             try
             {
-                var client = new RestClient("https://translate.yandex.net/api/v1.5/tr.json/translate?"
-                  + "key=trnsl.1.1.20170818T125137Z.bc602a78a7863e84.26863776415c893e9c6e51cc8a03462540980d54"
+                var client = new RestClient($"{_request}"
+                  + $"key={_token}"
                   + "&text=" + text
                   + "&lang=" + langFrom + "-" + langTo);
 

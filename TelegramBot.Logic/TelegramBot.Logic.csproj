@@ -64,11 +64,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="APIBot\Bot.cs" />
-    <Compile Include="APITranslate\INterfaceTranslator.cs" />
+    <Compile Include="APITranslate\ICanTranslate.cs" />
     <Compile Include="APITranslate\Translator.cs" />
-    <Compile Include="APIWeather\WorldWeatherOnline.cs" />
-    <Compile Include="APIWeather\INterfaceWeather.cs" />
+    <Compile Include="APIWeather\DarkSky.cs" />
+    <Compile Include="APIWeather\ICanGetWeatherByCoordinate.cs" />
+    <Compile Include="APIWeather\ICanGetWeatherByName.cs" />
     <Compile Include="APIWeather\OpenWeatherMap.cs" />
+    <Compile Include="APIWeather\WeatherResponeDarkSky\LocationResponce.cs" />
+    <Compile Include="APIWeather\WeatherResponeDarkSky\WeatherInfo.cs" />
+    <Compile Include="APIWeather\WeatherResponeDarkSky\WeatherResponce.cs" />
     <Compile Include="BaseContext.cs" />
     <Compile Include="Entity\City.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
@@ -76,11 +80,12 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="Repositories\UsersSQL.cs" />
-    <Compile Include="ResponseMessage.cs" />
+    <Compile Include="Repositories\IUsersRepository.cs" />
+    <Compile Include="Repositories\UsersRepository.cs" />
+    <Compile Include="MessageControl.cs" />
     <Compile Include="Entity\User.cs" />
     <Compile Include="APITranslate\TranslatorResponse.cs" />
-    <Compile Include="APIWeather\WeatherResponeOpenWeatherMap\WeatherDate.cs" />
+    <Compile Include="APIWeather\WeatherData.cs" />
     <Compile Include="APIWeather\WeatherResponeOpenWeatherMap\WeatherInfo.cs" />
     <Compile Include="APIWeather\WeatherResponeOpenWeatherMap\WeatherResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

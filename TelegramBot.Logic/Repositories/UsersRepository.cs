@@ -9,12 +9,12 @@ using TelegramBot.Logic.Entity;
 
 namespace TelegramBot.Logic.Repositories
 {
-    class UsersSQL : IDisposable
+    public class UsersRepository : IUsersRepository
     {
         private readonly ILogger _logger = NLog.LogManager.GetCurrentClassLogger();
-        BaseContext _BaseCt;
+        private BaseContext _BaseCt;
 
-        public UsersSQL()
+        public UsersRepository()
         {
             _BaseCt = new BaseContext();
         }
